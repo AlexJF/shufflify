@@ -1,0 +1,69 @@
+<div class="header">
+  <ul class="nav nav-pills pull-right">
+    <li class="active"><a ng-href="#">Home</a></li>
+    <li><a ng-href="#">About</a></li>
+    <li><a ng-href="#">Contact</a></li>
+  </ul>
+  <h3 class="text-muted">shufflify</h3>
+</div>
+
+<div class="row">
+	<oauth
+		site="https://accounts.spotify.com"
+		client-id="977de39311624bd69f92fc003d3d9c1a"
+		redirect-uri="http://127.0.0.1:9000"
+		profile-uri="https://api.spotify.com/v1/me"
+		scope="user-library-read playlist-read-private playlist-modify-private">
+	</oauth>
+
+	<button id="btn-load-sources" ng-click="loadSpotifyData()">Load sources</button>
+
+
+	<h3>Sources:</h3>
+	<div class="sources-wrapper">
+		<ui-select multiple ng-model="selectionData.sources">
+			<ui-select-match placeholder="Select source...">{{$item.name | characters: 70}} &lt;{{$item.total}} songs&gt;</ui-select-match>
+			<ui-select-choices repeat="source in spotifyData.sources | filter: {name: $select.search}">
+				<div ng-bind-html="source.name | characters: 70 | highlight: $select.search"></div>
+				<small>
+					num songs: {{source.total}}
+				</small>
+			</ui-select-choices>
+		</ui-select>
+		<!--<p>Selected: {{selectionData.sources}}</p>-->
+	</div>
+	<p>
+		You selected <strong>{{selectionData.sources.length}}</strong> sources containing a total of
+		<strong>{{selectionData.totalSongsInSources}}</strong> songs.
+	</p>
+
+	<h3>Destination:</h3>
+	<div class="destination-wrapper">
+		<input placeholder="New playlist name" type="text" class="form-control" id="new-playlist-text" ng-model="newPlaylistName"/>
+		<button class="btn btn-success" id="new-playlist-button" ng-click="addPlaylist(newPlaylistName)">
+			Add Playlist
+		</button>
+		<ui-select ng-model="selectionData.destination">
+			<ui-select-match placeholder="Select destination...">{{$select.selected.name | characters: 70}} &lt;{{$select.selected.total}} songs&gt;</ui-select-match>
+			<ui-select-choices repeat="playlist in spotifyData.playlists | filter: {name: $select.search}">
+				<div ng-bind-html="playlist.name | characters: 70 | highlight: $select.search"></div>
+				<small>
+					num songs: {{playlist.total}}
+				</small>
+			</ui-select-choices>
+		</ui-select>
+		<!--<p>Selected: {{selectionData.destination}}</p>-->
+	</div>
+
+	<h3>Options:</h3>
+	<div class="options-wrapper">
+		<label for="max-songs-destination">Max. songs in destination</label>
+		<input type="text" class="form-control" id="max-songs-destination" ng-model="selectionData.maxSongsDestination" />
+	</div>
+
+	<button class="btn btn-default" ng-click="showConfirmDialog()">Do it!</button>
+</div>
+
+<div class="footer">
+  <p>♥ from the Yeoman team</p>
+</div>
