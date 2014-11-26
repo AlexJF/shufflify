@@ -10,7 +10,8 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 	};
 
 	return {
-		getInfo: getInfo
+		getInfo: getInfo,
+		getTracks: getTracks
 	};
 
 	function getInfo(force) {
@@ -41,6 +42,106 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 
 		return deferred.promise;
 	}
+
+	function getTracks(positions) {
+		var deferred = $q.defer();
+		var library_tracks = [];
+		var url = 'https://api.spotify.com/v1/me/tracks';
+
+		function _getSomeTracks(requests) {
+			if (requests.length <= 0) {
+				deferred.resolve(library_tracks);
+				return;
+			}
+
+			var current_request = requests.shift();
+			$http.get(url, {params: {offset: current_request.offset, limit: current_request.limit}
+			}).then(function (result) {
+				for (var i = 0; i < result.data.items.length; ++i) {
+					// We are only interested in some of the tracks in the playlist, not all.
+					// Skip those we are not interested in.
+					if (!(i in current_request.items)) {
+						continue;
+					}
+					var playlist_track = result.data.items[i];
+					library_tracks.push(playlist_track.track.uri);
+				}
+
+				deferred.notify({
+					current: library_tracks.length,
+					total: positions.length
+				});
+
+				_getSomeTracks(requests);
+			});
+		}
+
+		function _getAllTracks() {
+			$http.get(url).then(function (result) {
+				result.data.items.forEach(function (playlist_track) {
+					library_tracks.push(playlist_track.track.uri);
+				});
+
+				deferred.notify({
+					current: library_tracks.length,
+					total: result.total
+				});
+
+				if (result.next) {
+					url = result.next;
+					_getAllTracks();
+				} else {
+					deferred.resolve(library_tracks);
+				}
+			});
+		}
+
+		if (positions) {
+			var requests = [];
+			var current_request = null;
+			var MAX_TRACKS_PER_REQUEST = 50;
+
+			positions.forEach(function (position) {
+				// If a request is currently being defined
+				if (current_request) {
+					// If adding this position would violate the API limits, save existing
+					// request and later on create a new one.
+					if (position - current_request.offset + 1 > MAX_TRACKS_PER_REQUEST) {
+						requests.push(current_request);
+						current_request = null;
+					}
+					// Else, if we can add this position to the request and respect API limits,
+					// do so...
+					else {
+						current_request.limit = position - current_request.offset + 1;
+						current_request.items.push(position - current_request.offset);
+					}
+				}
+
+				// If no request currently being defined, create new
+				if (!current_request) {
+					current_request  = {
+						offset: position,
+						limit: 1,
+						items: [0]
+					}
+				}
+			});
+
+			// If we have a current_request left over, add it to the request list
+			if (current_request) {
+				requests.push(current_request);
+			}
+
+			console.log(requests);
+
+			_getSomeTracks(requests);
+		} else {
+			_getAllTracks();
+		}
+
+		return deferred.promise;
+	}
 });
 
 spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
@@ -50,6 +151,8 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 
 	return {
 		getPlaylistsInfo: getPlaylistsInfo,
+		getPlaylistTracks: getPlaylistTracks,
+		setPlaylistTracks: setPlaylistTracks,
 		addPlaylist: addPlaylist
 	};
 
@@ -70,7 +173,8 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 			$http.get(url).then(function (result) {
 				result.data.items.forEach(function (playlist) {
 					console.log(JSON.stringify(playlist));
-					cache.playlists_info.push(parsePlaylist(playlist));
+					var parsed_playlist = parsePlaylist(playlist);
+					cache.playlists_info.push(parsed_playlist);
 				});
 
 				if (result.next) {
@@ -92,6 +196,170 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 		}
 
 		return deferred.promise;
+	}
+
+	function getPlaylistTracks(playlist_id, positions) {
+		var deferred = $q.defer();
+		var playlist_tracks = [];
+		var fields = "items.track.uri";
+		var url = 'https://api.spotify.com/v1/users/' + Profile.get().id + '/playlists/' + playlist_id + '/tracks';
+
+		function _getSomePlaylistTracks(requests) {
+			if (requests.length <= 0) {
+				deferred.resolve(playlist_tracks);
+				return;
+			}
+
+			var current_request = requests.shift();
+			$http.get(url, {params: {fields: fields, offset: current_request.offset, limit: current_request.limit}
+			}).then(function (result) {
+				for (var i = 0; i < result.data.items.length; ++i) {
+					// We are only interested in some of the tracks in the playlist, not all.
+					// Skip those we are not interested in.
+					if (!(i in current_request.items)) {
+						continue;
+					}
+
+					var playlist_track = result.data.items[i];
+					playlist_tracks.push(playlist_track.track.uri);
+				}
+
+				deferred.notify({
+					current: playlist_tracks.length,
+					total: positions.length
+				});
+
+				_getSomePlaylistTracks(requests);
+			});
+		}
+
+		function _getAllPlaylistTracks() {
+			$http.get(url, {params: {fields: fields}}).then(function (result) {
+				result.data.items.forEach(function (playlist_track) {
+					playlist_tracks.push(playlist_track.track.uri);
+				});
+
+				deferred.notify({
+					current: playlist_tracks.length,
+					total: result.total
+				});
+
+				if (result.next) {
+					url = result.next;
+					_getAllPlaylistTracks();
+				} else {
+					deferred.resolve(playlist_tracks);
+				}
+			});
+		}
+
+		if (positions) {
+			var requests = [];
+			var current_request = null;
+			var MAX_TRACKS_PER_REQUEST = 100;
+
+			positions.forEach(function (position) {
+				// If a request is currently being defined
+				if (current_request) {
+					// If adding this position would violate the API limits, save existing
+					// request and later on create a new one.
+					if (position - current_request.offset + 1 > MAX_TRACKS_PER_REQUEST) {
+						requests.push(current_request);
+						current_request = null;
+					}
+					// Else, if we can add this position to the request and respect API limits,
+					// do so...
+					else {
+						current_request.limit = position - current_request.offset + 1;
+						current_request.items.push(position - current_request.offset);
+					}
+				}
+
+				// If no request currently being defined, create new
+				if (!current_request) {
+					current_request  = {
+						offset: position,
+						limit: 1,
+						items: [0]
+					}
+				}
+			});
+
+			// If we have a current_request left over, add it to the request list
+			if (current_request) {
+				requests.push(current_request);
+			}
+
+			console.log(requests);
+
+			_getSomePlaylistTracks(requests);
+		} else {
+			_getAllPlaylistTracks();
+		}
+
+		return deferred.promise;
+	}
+
+	function clearPlaylist(playlist_id) {
+		var promise = $http.put(
+				'https://api.spotify.com/v1/users/' + Profile.get().id + '/playlists/' + playlist_id + '/tracks',
+				{uris: []}
+		);
+
+		return promise.then(function () {
+			for (var i = 0; i < cache.playlists_info.length; ++i) {
+				var playlist_info = cache.playlists_info[i];
+
+				if (playlist_info.id == playlist_id) {
+					playlist_info.total = 0;
+					break;
+				}
+			}
+		});
+	}
+
+	function addPlaylistTracks(playlist_id, track_uris) {
+		var MAX_TRACKS_PER_REQUEST = 100;
+
+		var deferred = $q.defer();
+		var num_tracks_added = 0;
+		var url = 'https://api.spotify.com/v1/users/' + Profile.get().id + '/playlists/' + playlist_id + '/tracks';
+
+		function _addPlaylistTracks(track_uris) {
+			if (track_uris.length <= 0) {
+				deferred.resolve(num_tracks_added);
+				return;
+			}
+
+			var current_batch = track_uris.splice(0, MAX_TRACKS_PER_REQUEST);
+			$http.post(url, {uris: current_batch}).then(function (result) {
+				num_tracks_added += current_batch.length;
+				deferred.notify({
+					current: num_tracks_added,
+					total: track_uris.length
+				});
+				_addPlaylistTracks(track_uris);
+			});
+		}
+
+		_addPlaylistTracks(track_uris);
+
+		return deferred.promise.then(function () {
+			for (var i = 0; i < cache.playlists_info.length; ++i) {
+				var playlist_info = cache.playlists_info[i];
+
+				if (playlist_info.id == playlist_id) {
+					playlist_info.total = num_tracks_added;
+					break;
+				}
+			}
+		});
+	}
+
+	function setPlaylistTracks(playlist_id, track_uris) {
+		return clearPlaylist(playlist_id).then(function () {
+			return addPlaylistTracks(playlist_id, track_uris);
+		});
 	}
 
 	function addPlaylist(name) {
@@ -130,7 +398,8 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 
 spotifyServices.factory('SpotifySources', function ($q, SpotifyLibrary, SpotifyPlaylist) {
 	return {
-		get: getSources
+		get: getSources,
+		getSourceTracks: getSourceTracks
 	};
 
 	function getSources() {
@@ -142,5 +411,13 @@ spotifyServices.factory('SpotifySources', function ($q, SpotifyLibrary, SpotifyP
 				merged: [result[0]].concat(result[1])
 			}
 		});
+	}
+
+	function getSourceTracks(source, track_positions) {
+		if (source.type == 'library') {
+			return SpotifyLibrary.getTracks(track_positions);
+		} else {
+			return SpotifyPlaylist.getPlaylistTracks(source.id, track_positions);
+		}
 	}
 });

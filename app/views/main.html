@@ -12,6 +12,7 @@
 		site="https://accounts.spotify.com"
 		client-id="977de39311624bd69f92fc003d3d9c1a"
 		redirect-uri="http://127.0.0.1:9000"
+		response-type="token"
 		profile-uri="https://api.spotify.com/v1/me"
 		scope="user-library-read playlist-read-private playlist-modify-private">
 	</oauth>
@@ -30,7 +31,7 @@
 				</small>
 			</ui-select-choices>
 		</ui-select>
-		<!--<p>Selected: {{selectionData.sources}}</p>-->
+		<p>Selected: {{selectionData.sources}}</p>
 	</div>
 	<p>
 		You selected <strong>{{selectionData.sources.length}}</strong> sources containing a total of
@@ -52,7 +53,7 @@
 				</small>
 			</ui-select-choices>
 		</ui-select>
-		<!--<p>Selected: {{selectionData.destination}}</p>-->
+		<p>Selected: {{selectionData.destination}}</p>
 	</div>
 
 	<h3>Options:</h3>
