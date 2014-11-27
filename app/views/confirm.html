@@ -3,12 +3,12 @@
 </div>
 <div class="modal-body">
 	<p>
-		<span ng-if="selectionData.maxSongsDestination >= 0">
+		<span ng-if="selectionData.maxSongsDestination === 0 || selectionData.maxSongsDestination > 0">
 			I will transfer <strong>up to {{selectionData.totalSongsInDestination}}</strong> songs to the
 			<strong>"{{selectionData.destination.name}}"</strong> playlist. These songs will be randomly chosen
 			from the total of {{selectionData.totalSongsInSources}} songs in the following sources:
 		</span>
-		<span ng-if="selectionData.maxSongsDestination < 0">
+		<span ng-if="(!selectionData.maxSongsDestination && selectionData.maxSongsDestination !== 0) || selectionData.maxSongsDestination < 0">
 			I will shuffle and transfer to the <strong>"{{selectionData.destination.name | characters:70}}"</strong>
 			playlist <strong>all {{selectionData.totalSongsInSources}} songs</strong> in the following sources:
 		</span>

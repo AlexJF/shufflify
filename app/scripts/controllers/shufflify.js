@@ -68,16 +68,11 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 		var maxSongsDestination = $scope.selectionData.maxSongsDestination;
 		var totalSongsInSources = $scope.selectionData.totalSongsInSources;
 
-		console.log("Max songs destination: " + maxSongsDestination);
-		console.log("Total songs in sources: " + totalSongsInSources);
-
 		if ((!maxSongsDestination && maxSongsDestination !== 0) || maxSongsDestination < 0) {
 			$scope.selectionData.totalSongsInDestination = totalSongsInSources;
 		} else {
 			$scope.selectionData.totalSongsInDestination = Math.min(maxSongsDestination, totalSongsInSources);
 		}
-
-		console.log("Total songs in destination: " + $scope.selectionData.totalSongsInDestination);
 	});
 
 	var addPlaylistDialogCtrl = function ($scope, $modalInstance, selectionData) {
@@ -87,7 +82,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 		};
 
 		$scope.ok = function () {
-			console.log("New playlist name: " + $scope.playlistInfo.name);
 			SpotifyPlaylist.addPlaylist($scope.playlistInfo.name).then(function (playlist) {
 				$modalInstance.close(playlist);
 			});
@@ -201,18 +195,16 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 				}
 			});
 
+			// TODO: Make this more efficient if we're considering all songs, not just a sample
 			$scope.selectionData.sources.forEach(function (source) {
 				for (var i = 0; i < source.total; ++i) {
 					songs.push(songNum++);
 				}
 			});
 
-			console.log("Songs: " + songs);
-
 			var chosen_songs = window.chance.pick(songs, $scope.selectionData.totalSongsInDestination);
 			// Sort by integers
 			chosen_songs.sort(function (a, b) { return a - b; });
-			console.log("Chosen songs: " + chosen_songs);
 
 			var total_chosen_songs = chosen_songs.length;
 			var i = 0;
@@ -240,7 +232,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 
 				promises.push(SpotifySources.getSourceTracks(source, source_songs).then(null, null, function (progress) {
 					$scope.$broadcast("progress:tracks_read", progress.delta);
-					console.log("Collecting track info progress: " + JSON.stringify(progress));
 				}));
 			});
 
@@ -255,8 +246,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 							track_uris = track_uris.concat(tracks);
 						});
 
-						console.log("Track URIs to write to destination: " + track_uris);
-
 						SpotifyPlaylist.setPlaylistTracks($scope.selectionData.destination.id, track_uris).then(
 								// Success
 								function (result) {
@@ -268,7 +257,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 								},
 								function (progress) {
 									$scope.$broadcast("progress:tracks_written", progress.delta);
-									console.log("Adding tracks to destination progress: " + (progress.current / progress.total * 100) + "%");
 								}
 						);
 
@@ -279,7 +267,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 						// TODO: Handle error
 					},
 					function (progress) {
-						console.log("$q.all.progress: " + JSON.stringify(progress));
 						// TODO: Handle this but apparently it is not called??
 					}
 			);

@@ -139,6 +139,39 @@ oauth {
 	}
 }
 
+#shufflify-description {
+	color: $site-text-highlight-color;
+	font-size: 1.5rem;
+
+	a {
+		color: $site-alternative-color;
+	}
+}
+
+::-webkit-input-placeholder { /* WebKit browsers */
+	color:    #999;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+	color:    #999;
+	opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+	color:    #999;
+	opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10+ */
+	color:    #999;
+}
+
+.ui-select-multiple .ui-select-match {
+	display: inline-block;
+	margin-left: 6px;
+}
+
+.ui-select-bootstrap .ui-select-choices-row.active > a {
+	background-color: $site-alternative-color;
+}
+
 #sources-wrapper {
 	#sources-header {
 		@include make-sm-column(12);
@@ -155,18 +188,23 @@ oauth {
 
 	#destination-value {
 		@include make-sm-column(12);
-		overflow: hidden;
+
+		display: table;
 
 		#destination-picker {
-			overflow: hidden;
-			padding-right: 0.75rem;
+			display: table-cell;
+			width: 100%;
+			padding-right: 1rem;
+			vertical-align: top;
 		}
 	}
 
 	#new-playlist-button {
 		background-color: $site-alternative-color;
 		border-color: $site-alternative-color;
-		float: right;
+		display: table-cell;
+		width: 4rem;
+		vertical-align: top;
 	}
 
 	#new-playlist-button-wrapper {

@@ -139,8 +139,6 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 				requests.push(current_request);
 			}
 
-			console.log(requests);
-
 			_getSomeTracks(requests);
 		} else {
 			_getAllTracks();
@@ -178,7 +176,6 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 		function _getPlaylistsInfo() {
 			$http.get(url).then(function (result) {
 				result.data.items.forEach(function (playlist) {
-					console.log(JSON.stringify(playlist));
 					var parsed_playlist = parsePlaylist(playlist);
 					cache.playlists_info.push(parsed_playlist);
 				});
@@ -301,8 +298,6 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 				requests.push(current_request);
 			}
 
-			console.log(requests);
-
 			_getSomePlaylistTracks(requests);
 		} else {
 			_getAllPlaylistTracks();
@@ -417,7 +412,6 @@ spotifyServices.factory('SpotifySources', function ($q, SpotifyLibrary, SpotifyP
 
 	function getSources() {
 		return $q.all([SpotifyLibrary.getInfo(true), SpotifyPlaylist.getPlaylistsInfo(true)]).then(function (result) {
-			console.log(JSON.stringify(result));
 			return {
 				library: result[0],
 				playlists: result[1],

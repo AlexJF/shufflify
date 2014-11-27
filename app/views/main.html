@@ -6,6 +6,19 @@
 </header>
 
 <div id="content">
+	<div id="shufflify-description">
+		<p>
+			Shufflify allows you to create a Spotify playlist with a random sample of tracks from your Spotify music library and/or other
+			playlists.
+		</p>
+		<p>
+			Cool uses:
+		</p>
+		<ul>
+			<li>Randomize the <a href="http://community.spotify.com/t5/Spotify-Ideas/Offline-Song-Limit-per-Device/idi-p/409606">3333 songs you're limited to per-device.</a></li>
+			<li>Control the size of your offline-saved playlist by offline-saving a limited size sample from your library.</li>
+		</ul>
+	</div>
 	<oauth
 			site="https://accounts.spotify.com"
 			client-id="977de39311624bd69f92fc003d3d9c1a"
@@ -16,8 +29,6 @@
 	</oauth>
 
 	<form class="form-horizontal logged-in-content" ng-show="profile">
-		<!--<button id="btn-load-sources" ng-click="loadSpotifyData()">Load sources</button>-->
-
 		<div id="sources-wrapper" class="form-group">
 			<div id="sources-header">
 				<h3>Sources:</h3>
@@ -46,10 +57,6 @@
 				<h3>Destination:</h3>
 			</div>
 			<div id="destination-value">
-				<button class="btn btn-success" id="new-playlist-button" ng-click="addPlaylist()">
-					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-					<span class="sr-only">Add new playlist</span>
-				</button>
 				<div id="destination-picker">
 					<ui-select ng-model="selectionData.destination">
 						<ui-select-match placeholder="Select destination...">{{$select.selected.name | characters: 70}}
@@ -63,6 +70,10 @@
 						</ui-select-choices>
 					</ui-select>
 				</div>
+				<button class="btn btn-success" id="new-playlist-button" ng-click="addPlaylist()">
+					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+					<span class="sr-only">Add new playlist</span>
+				</button>
 			</div>
 		</div>
 
