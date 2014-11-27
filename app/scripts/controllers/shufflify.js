@@ -15,10 +15,12 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 		totalSongsInSources: 0,
 		destination: null,
 		totalSongsInDestination: 0,
-		maxSongsDestination: -1
+		maxSongsDestination: null
 	};
 
 	$scope.newPlaylistName = "";
+	$scope.profile = null;
+	$scope.spotifyDataStartedLoading = false;
 
 	$scope.$on('oauth:logout', forgetProfile);
 	$scope.$on('oauth:expired', forgetProfile);
@@ -27,17 +29,23 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 
 	function loadProfile(event, profile) {
 		console.log('Profile ' + profile);
-		$scope.profile = profile;
 		$http.defaults.headers.common.Authorization = 'Bearer ' + AccessToken.get().access_token;
-		$('#btn-load-sources').show();
+		$scope.profile = profile;
+		$scope.loadSpotifyData();
 	}
 
 	function forgetProfile() {
+		$scope.profile = null;
+		$scope.spotifyDataStartedLoading = false;
 		$http.defaults.headers.common.Authorization = null;
-		$('#btn-load-sources').hide();
+		AccessToken.destroy();
 	}
 
 	$scope.loadSpotifyData = function () {
+		if ($scope.spotifyDataStartedLoading) {
+			return;
+		}
+		$scope.spotifyDataStartedLoading = true;
 		SpotifySources.get().then(function (sources) {
 			console.log(JSON.stringify(sources));
 			$scope.spotifyData.sources = sources.merged;
@@ -63,21 +71,111 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 		console.log("Max songs destination: " + maxSongsDestination);
 		console.log("Total songs in sources: " + totalSongsInSources);
 
-		if (maxSongsDestination < 0) {
+		if ((!maxSongsDestination && maxSongsDestination !== 0) || maxSongsDestination < 0) {
 			$scope.selectionData.totalSongsInDestination = totalSongsInSources;
 		} else {
 			$scope.selectionData.totalSongsInDestination = Math.min(maxSongsDestination, totalSongsInSources);
 		}
+
+		console.log("Total songs in destination: " + $scope.selectionData.totalSongsInDestination);
 	});
 
+	var addPlaylistDialogCtrl = function ($scope, $modalInstance, selectionData) {
+		$scope.selectionData = selectionData;
+		$scope.playlistInfo = {
+			name: null
+		};
+
+		$scope.ok = function () {
+			console.log("New playlist name: " + $scope.playlistInfo.name);
+			SpotifyPlaylist.addPlaylist($scope.playlistInfo.name).then(function (playlist) {
+				$modalInstance.close(playlist);
+			});
+		};
+
+		$scope.cancel = function () {
+			$modalInstance.dismiss('cancel');
+		};
+	};
+
 	$scope.addPlaylist = function (name) {
-		SpotifyPlaylist.addPlaylist(name);
+		var addPlaylistDialog = $modal.open({
+			templateUrl: "views/add_playlist.html",
+			controller: addPlaylistDialogCtrl,
+			windowClass: "add-playlist-dialog",
+			resolve: {
+				selectionData: function () {
+					return $scope.selectionData;
+				}
+			}
+		});
+
+		addPlaylistDialog.result.then(function (playlist) {
+			$scope.selectionData.destination = playlist;
+		});
+	};
+
+	var confirmDialogCtrl = function ($scope, $modalInstance, selectionData) {
+		$scope.selectionData = selectionData;
+
+		$scope.ok = function () {
+			$modalInstance.close();
+		};
+
+		$scope.cancel = function () {
+			$modalInstance.dismiss('cancel');
+		};
+	};
+
+	var progressDialogCtrl = function ($scope, $modalInstance, selectionData) {
+		$scope.selectionData = selectionData;
+
+		$scope.progressData = {
+			total_songs: $scope.selectionData.totalSongsInDestination,
+			num_tracks_read: 0,
+			num_tracks_written: 0,
+			percent_tracks_read: 0,
+			percent_tracks_written: 0,
+			finished_read: false,
+			finished_write: false
+		};
+
+		$scope.$watchCollection("[progressData.num_tracks_read, progressData.total_songs]", function () {
+			$scope.progressData.percent_tracks_read =
+				$scope.progressData.num_tracks_read / $scope.progressData.total_songs * 100;
+		});
+
+		$scope.$watchCollection("[progressData.num_tracks_written, progressData.total_songs]", function () {
+			$scope.progressData.percent_tracks_written =
+					$scope.progressData.num_tracks_written / $scope.progressData.total_songs * 100;
+		});
+
+		$scope.$on("progress:tracks_read", function (event, delta) {
+			$scope.progressData.num_tracks_read += delta;
+		});
+
+		$scope.$on("progress:finished_read", function () {
+			$scope.progressData.finished_read = true;
+		});
+
+		$scope.$on("progress:tracks_written", function (event, delta) {
+			$scope.progressData.num_tracks_written += delta;
+		});
+
+		$scope.$on("progress:finished_write", function () {
+			$scope.progressData.finished_write = true;
+		});
+
+		$scope.ok = function () {
+			$modalInstance.close();
+		};
 	};
 
 	$scope.showConfirmDialog = function() {
 		var confirmDialog = $modal.open({
-			templateUrl: 'views/confirm.html',
+			templateUrl: "views/confirm.html",
 			controller: confirmDialogCtrl,
+			windowClass: "confirm-dialog",
 			resolve: {
 				selectionData: function () {
 					return $scope.selectionData;
@@ -88,6 +186,20 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 		confirmDialog.result.then(function () {
 			var songs = [];
 			var songNum = 0;
+
+			var progressDialog = $modal.open({
+				templateUrl: "views/progress.html",
+				controller: progressDialogCtrl,
+				windowClass: "progress-dialog",
+				backdrop: "static",
+				keyboard: false,
+				scope: $scope,
+				resolve: {
+					selectionData: function () {
+						return $scope.selectionData;
+					}
+				}
+			});
 
 			$scope.selectionData.sources.forEach(function (source) {
 				for (var i = 0; i < source.total; ++i) {
@@ -127,6 +239,7 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 				}
 
 				promises.push(SpotifySources.getSourceTracks(source, source_songs).then(null, null, function (progress) {
+					$scope.$broadcast("progress:tracks_read", progress.delta);
 					console.log("Collecting track info progress: " + JSON.stringify(progress));
 				}));
 			});
@@ -134,6 +247,8 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 			$q.all(promises).then(
 					// Success
 					function (result) {
+						$scope.$broadcast("progress:finished_read");
+
 						var track_uris = [];
 
 						result.forEach(function (tracks) {
@@ -145,13 +260,15 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 						SpotifyPlaylist.setPlaylistTracks($scope.selectionData.destination.id, track_uris).then(
 								// Success
 								function (result) {
+									$scope.$broadcast("progress:finished_write");
 									// TODO: Do something after everything is finished
 								},
 								function (result) {
 									// TODO: Do something on error
 								},
 								function (progress) {
-									console.log("Adding tracks to destination progress: " + (progress.current / progress.total) + "%");
+									$scope.$broadcast("progress:tracks_written", progress.delta);
+									console.log("Adding tracks to destination progress: " + (progress.current / progress.total * 100) + "%");
 								}
 						);
 
@@ -167,20 +284,5 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 					}
 			);
 		});
-	};
-
-	var confirmDialogCtrl = function ($scope, $modalInstance, selectionData) {
-		// Inject Math into the scope so we can use math functions
-		$scope.Math = window.Math;
-
-		$scope.selectionData = selectionData;
-
-		$scope.ok = function () {
-			$modalInstance.close();
-		};
-
-		$scope.cancel = function () {
-			$modalInstance.dismiss('cancel');
-		};
 	};
 });

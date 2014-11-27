@@ -57,17 +57,22 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 			var current_request = requests.shift();
 			$http.get(url, {params: {offset: current_request.offset, limit: current_request.limit}
 			}).then(function (result) {
+				var handled = 0;
+
 				for (var i = 0; i < result.data.items.length; ++i) {
 					// We are only interested in some of the tracks in the playlist, not all.
 					// Skip those we are not interested in.
 					if (!(i in current_request.items)) {
 						continue;
 					}
+
 					var playlist_track = result.data.items[i];
 					library_tracks.push(playlist_track.track.uri);
+					++handled;
 				}
 
 				deferred.notify({
+					delta: handled,
 					current: library_tracks.length,
 					total: positions.length
 				});
@@ -83,6 +88,7 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 				});
 
 				deferred.notify({
+					delta: result.data.items.length,
 					current: library_tracks.length,
 					total: result.total
 				});
@@ -213,6 +219,8 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 			var current_request = requests.shift();
 			$http.get(url, {params: {fields: fields, offset: current_request.offset, limit: current_request.limit}
 			}).then(function (result) {
+				var handled = 0;
+
 				for (var i = 0; i < result.data.items.length; ++i) {
 					// We are only interested in some of the tracks in the playlist, not all.
 					// Skip those we are not interested in.
@@ -222,9 +230,11 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 
 					var playlist_track = result.data.items[i];
 					playlist_tracks.push(playlist_track.track.uri);
+					++handled;
 				}
 
 				deferred.notify({
+					delta: handled,
 					current: playlist_tracks.length,
 					total: positions.length
 				});
@@ -240,6 +250,7 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 				});
 
 				deferred.notify({
+					delta: result.data.items.length,
 					current: playlist_tracks.length,
 					total: result.total
 				});
@@ -335,6 +346,7 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 			$http.post(url, {uris: current_batch}).then(function (result) {
 				num_tracks_added += current_batch.length;
 				deferred.notify({
+					delta: current_batch.length,
 					current: num_tracks_added,
 					total: track_uris.length
 				});
@@ -367,7 +379,8 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 			name: name,
 			public: false
 		});
-		promise.then(function (result) {
+
+		return promise.then(function (result) {
 			var playlist = parsePlaylist(result.data);
 			cache.playlists_info.push(playlist);
 			sortPlaylists();

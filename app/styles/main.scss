@@ -2,94 +2,265 @@ $icon-font-path: "/bower_components/sass-bootstrap/fonts/";
 
 @import 'sass-bootstrap/lib/bootstrap';
 
-.browsehappy {
-    margin: 0.2em 0;
-    background: #ccc;
-    color: #000;
-    padding: 0.2em 0;
+$site-background-color: #121314;
+$site-background-highlight-color: #1C1C1F;
+$site-text-color: #AFAFAF;
+$site-text-highlight-color: lighten($site-text-color, 20%);
+$site-alternative-color: #84BD00;
+
+// # Mixins
+@mixin preserve-3d {
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
 }
 
-/* Space out content a bit */
+@mixin vertical-align {
+	position: relative;
+	top: 50%;
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
+
+@mixin vertical-align-md {
+	@media (min-width: $screen-md-min) {
+		@include vertical-align;
+	}
+}
+
+@mixin vertical-align-sm {
+	@media (min-width: $screen-sm-min) {
+		@include vertical-align;
+	}
+}
+
+@mixin center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+@mixin float-left-md {
+	@media (min-width: $screen-md-min) {
+		float: left;
+	}
+}
+
+@mixin float-left-sm {
+	@media (min-width: $screen-sm-min) {
+		float: left;
+	}
+}
+
+@mixin float-right-md {
+	@media (min-width: $screen-md-min) {
+		float: right;
+	}
+}
+
+@mixin float-right-sm {
+	@media (min-width: $screen-sm-min) {
+		float: right;
+	}
+}
+
+// # Global
+html {
+	font-size: 62.5%;
+}
+
 body {
-    padding-top: 20px;
-    padding-bottom: 20px;
+	background: $site-background-color;
+	color: $site-text-color;
 }
 
-/* Everything but the jumbotron gets side spacing for mobile first views */
-.header,
-.marketing,
-.footer {
-    padding-left: 15px;
-    padding-right: 15px;
+a {
+	color: $site-text-color;
 }
 
-/* Custom page header */
-.header {
-    border-bottom: 1px solid #e5e5e5;
-}
-
-/* Make the masthead heading the same height as the navigation */
-.header h3 {
-    margin-top: 0;
-    margin-bottom: 0;
-    line-height: 40px;
-    padding-bottom: 19px;
-}
-
-/* Custom page footer */
-.footer {
-    padding-top: 19px;
-    color: #777;
-    border-top: 1px solid #e5e5e5;
-}
-
-.container-narrow > hr {
-    margin: 30px 0;
-}
-
-/* Main marketing message and sign up button */
-.jumbotron {
-    text-align: center;
-    border-bottom: 1px solid #e5e5e5;
-}
-
-.jumbotron .btn {
-    font-size: 21px;
-    padding: 14px 24px;
-}
-
-/* Supporting marketing content */
-.marketing {
-    margin: 40px 0;
-}
-
-.marketing p + h4 {
-    margin-top: 28px;
-}
-
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-    .container {
-        max-width: 730px;
-    }
-
-    /* Remove the padding we set earlier */
-    .header,
-    .marketing,
-    .footer {
-        padding-left: 0;
-        padding-right: 0;
-    }
-    /* Space out the masthead */
-    .header {
-        margin-bottom: 30px;
-    }
-    /* Remove the bottom border on the jumbotron for visual effect */
-    .jumbotron {
-        border-bottom: 0;
-    }
+a:hover {
+	color: $site-text-highlight-color;
+	text-decoration: none;
 }
 
 .nav, .pagination, .carousel, .panel-title a {
 	cursor: pointer;
+}
+
+#site-wrapper {
+	@include container-fixed;
+}
+
+// # Header
+header.site {
+	@include make-row;
+
+	#site-name {
+		@include make-md-column(12);
+		@include preserve-3d;
+
+		padding: 2.5rem 0rem;
+		text-align: center;
+
+		margin: 0;
+
+		a {
+			color: $site-alternative-color;
+			font-size: 5rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+	}
+}
+
+// # Content
+#content {
+	@include make-row;
+
+	padding: 1rem 2rem;
+}
+
+oauth {
+	@include center;
+	text-align: center;
+
+	a {
+		color: $site-text-highlight-color;
+
+		span {
+			display: inline-block;
+			cursor: pointer;
+			border-radius: 3px;
+			padding: 5px 10px;
+			background: $site-alternative-color;
+			text-transform: uppercase;
+		}
+	}
+}
+
+#sources-wrapper {
+	#sources-header {
+		@include make-sm-column(12);
+	}
+	#sources-value {
+		@include make-sm-column(12);
+	}
+}
+
+#destination-wrapper {
+	#destination-header {
+		@include make-sm-column(12);
+	}
+
+	#destination-value {
+		@include make-sm-column(12);
+		overflow: hidden;
+
+		#destination-picker {
+			overflow: hidden;
+			padding-right: 0.75rem;
+		}
+	}
+
+	#new-playlist-button {
+		background-color: $site-alternative-color;
+		border-color: $site-alternative-color;
+		float: right;
+	}
+
+	#new-playlist-button-wrapper {
+		@include make-sm-column(2);
+
+	}
+}
+
+#options-wrapper {
+	#options-header {
+		@include make-sm-column(12);
+	}
+
+	div.option {
+		@include make-sm-column(12);
+	}
+}
+
+#btn-do-it {
+	@include center;
+
+	color: $site-text-highlight-color;
+	font-size: 3rem;
+	padding: 0.5rem 2rem;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	background: $site-alternative-color;
+}
+
+.modal-content {
+	background-color: $site-background-highlight-color;
+	color: $site-text-color;
+
+	#replacement-warning {
+		margin-bottom: 0px;
+	}
+
+	.modal-footer {
+		margin-top: 0px;
+	}
+}
+
+.ui-select-match-item {
+	background-color: $site-alternative-color;
+	color: $site-text-highlight-color;
+}
+
+.progress-bar {
+	background-color: $site-alternative-color;
+}
+
+// # Footer
+footer.site {
+	@include make-row;
+	@include preserve-3d;
+
+	text-align: center;
+
+	@media (min-width: $screen-sm-min) {
+		height: 3rem;
+	}
+
+	a {
+		color: $site-alternative-color;
+	}
+
+	#powered-by {
+		@include make-sm-column(4);
+		@include vertical-align-sm;
+		padding: 0;
+
+		@media (min-width: $screen-sm-min) {
+			text-align: left;
+		}
+	}
+
+	#copyright {
+		@include make-sm-column(4);
+		@include vertical-align-sm;
+		padding: 0;
+
+		@media (min-width: $screen-sm-min) {
+			text-align: center;
+		}
+	}
+
+	#feedback {
+		@include make-sm-column(4);
+		@include vertical-align-sm;
+
+		padding: 0;
+
+		@media (min-width: $screen-sm-min) {
+			text-align: right;
+		}
+	}
 }
