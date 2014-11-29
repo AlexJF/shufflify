@@ -96,22 +96,30 @@ a:hover {
 header.site {
 	@include make-row;
 
-	#site-name {
+	h1 {
 		@include make-md-column(12);
-		@include preserve-3d;
 
-		padding: 2.5rem 0rem;
 		text-align: center;
 
-		margin: 0;
+		#site-logo {
+			vertical-align: middle;
+			width: 200px;
+			height: 200px;
+		}
 
-		a {
+		#site-name {
+			padding: 2.5rem 0rem;
+			text-align: center;
+
+			margin: 0;
+
 			color: $site-alternative-color;
 			font-size: 5rem;
 			font-weight: 900;
 			text-transform: uppercase;
 		}
 	}
+
 }
 
 // # Content
@@ -132,7 +140,9 @@ oauth {
 			display: inline-block;
 			cursor: pointer;
 			border-radius: 3px;
-			padding: 5px 10px;
+			font-size: 2rem;
+			font-weight: bold;
+			padding: 1rem 2rem;
 			background: $site-alternative-color;
 			text-transform: uppercase;
 		}
@@ -254,6 +264,11 @@ oauth {
 
 .progress-bar {
 	background-color: $site-alternative-color;
+}
+
+.ads {
+	@include center;
+	text-align: center;
 }
 
 // # Footer

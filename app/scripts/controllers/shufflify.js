@@ -2,8 +2,11 @@
 
 var shufflifyApp = angular.module('shufflifyApp');
 
-shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, SpotifyLibrary,
+shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifySources, SpotifyLibrary,
 		SpotifyPlaylist, AccessToken, $modal, $q) {
+	$scope.host = $location.host();
+	$scope.localhost = $scope.host == '127.0.0.1' || $scope.host == 'localhost';
+
 	$scope.spotifyData = {
 		sources: [],
 		library: [],
@@ -131,7 +134,9 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 			percent_tracks_read: 0,
 			percent_tracks_written: 0,
 			finished_read: false,
-			finished_write: false
+			finished_write: false,
+			write_error: null,
+			read_error: null
 		};
 
 		$scope.$watchCollection("[progressData.num_tracks_read, progressData.total_songs]", function () {
@@ -158,6 +163,14 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 
 		$scope.$on("progress:finished_write", function () {
 			$scope.progressData.finished_write = true;
+		});
+
+		$scope.$on("progress:read_error", function (event, error) {
+			$scope.progressData.read_error = error;
+		});
+
+		$scope.$on("progress:write_error", function (event, error) {
+			$scope.progressData.write_error = error;
 		});
 
 		$scope.ok = function () {
@@ -250,10 +263,9 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 								// Success
 								function (result) {
 									$scope.$broadcast("progress:finished_write");
-									// TODO: Do something after everything is finished
 								},
-								function (result) {
-									// TODO: Do something on error
+								function (error) {
+									$scope.$broadcast("progress:write_error", error);
 								},
 								function (progress) {
 									$scope.$broadcast("progress:tracks_written", progress.delta);
@@ -263,11 +275,11 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, SpotifySources, Spo
 						console.log("Success");
 					},
 					// Error
-					function (result) {
-						// TODO: Handle error
+					function (error) {
+						$scope.$broadcast("progress:read_error", error);
 					},
 					function (progress) {
-						// TODO: Handle this but apparently it is not called??
+						// Apparently never called??
 					}
 			);
 		});

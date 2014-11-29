@@ -1,7 +1,10 @@
 <div id="site-wrapper">
 <header class="site">
-	<h1 id="site-name">
-		<a ng-href="#">Shufflify</a>
+	<h1>
+		<a ng-href="#">
+			<img id="site-logo" src="images/shufflify.png" />
+			<span id="site-name">Shufflify</span>
+		</a>
 	</h1>
 </header>
 
@@ -22,7 +25,7 @@
 	<oauth
 			site="https://accounts.spotify.com"
 			client-id="977de39311624bd69f92fc003d3d9c1a"
-			redirect-uri="http://127.0.0.1:9000"
+			redirect-uri="{{localhost ? 'http://127.0.0.1:9000' : 'http://shufflify.alexjf.net'}}"
 			response-type="token"
 			profile-uri="https://api.spotify.com/v1/me"
 			scope="user-library-read playlist-read-private playlist-modify-private">
@@ -99,15 +102,34 @@
 	</form>
 </div>
 
+	<div class="ads">
+		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+		<!-- Shufflify -->
+		<ins class="adsbygoogle"
+		     style="display:inline-block;width:728px;height:90px"
+		     data-ad-client="ca-pub-7030271622919244"
+		     data-ad-slot="3820789518"></ins>
+		<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+	</div>
+
 <footer class="site">
 	<div id="powered-by">
-		Powered by <a href="http://angularjs.org">AngularJS</a>
+		Powered by
+		<a href="http://angularjs.org">AngularJS</a>
+		&nbsp;·&nbsp;
+		<a href="https://developer.spotify.com/web-api/">Spotify Web API</a>
 	</div>
 	<div id="copyright">
 		Copyright © <a href="http://www.alexjf.net">Alex JF</a> - 2014
 	</div>
 	<div id="feedback">
-		<a href="#">Feedback</a>
+		<a href="https://github.com/AlexJF/shufflify">Github</a>
+		&nbsp;·&nbsp;
+		<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=alexandrejorgefonseca%40gmail%2ecom&lc=PT&item_number=shufflify&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted">Donate</a>
+		&nbsp;·&nbsp;
+		<a href="https://secure.jotformeu.com/form/43322557704352">Feedback</a>
 	</div>
 </footer>
 </div>
