@@ -1,10 +1,8 @@
 'use strict';
 
-var spotifyServices = angular.module('spotifyServices', [
-		'oauth'
-]);
+var spotifyServices = angular.module('spotifyServices', ['oauth']);
 
-spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
+spotifyServices.factory('SpotifyLibrary', ["$q", "$http", function ($q, $http) {
 	var cache = {
 		info: null
 	};
@@ -146,9 +144,9 @@ spotifyServices.factory('SpotifyLibrary', function ($q, $http) {
 
 		return deferred.promise;
 	}
-});
+}]);
 
-spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
+spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function ($q, $http, Profile) {
 	var cache = {
 		playlists_info: []
 	};
@@ -402,9 +400,9 @@ spotifyServices.factory('SpotifyPlaylist', function ($q, $http, Profile) {
 	function sortPlaylists() {
 		cache.playlists_info.sort(sort_by('name'));
 	}
-});
+}]);
 
-spotifyServices.factory('SpotifySources', function ($q, SpotifyLibrary, SpotifyPlaylist) {
+spotifyServices.factory('SpotifySources', ["$q", "SpotifyLibrary", "SpotifyPlaylist", function ($q, SpotifyLibrary, SpotifyPlaylist) {
 	return {
 		get: getSources,
 		getSourceTracks: getSourceTracks
@@ -427,4 +425,4 @@ spotifyServices.factory('SpotifySources', function ($q, SpotifyLibrary, SpotifyP
 			return SpotifyPlaylist.getPlaylistTracks(source.id, track_positions);
 		}
 	}
-});
+}]);

@@ -10,7 +10,7 @@ var shufflifyApp = angular.module('shufflifyApp', [
 	'truncate',
 ]);
 
-shufflifyApp.config(function ($routeProvider, $locationProvider, uiSelectConfig) {
+shufflifyApp.config(["$routeProvider", "$locationProvider", "uiSelectConfig", function ($routeProvider, $locationProvider, uiSelectConfig) {
 	$routeProvider
 			.when('/', {
 				templateUrl: 'views/main.html',
@@ -21,4 +21,4 @@ shufflifyApp.config(function ($routeProvider, $locationProvider, uiSelectConfig)
 			});
 	$locationProvider.html5Mode(true).hashPrefix('!');
 	uiSelectConfig.theme = 'bootstrap';
-});
+}]);

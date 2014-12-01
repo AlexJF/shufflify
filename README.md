@@ -1,5 +1,7 @@
 # Shufflify
 
+[Visit the Shufflify website](http://shufflify.alexjf.net)
+
 A Web app to allow the automatic creation of a playlist containing a random sample of all tracks in a set of sources (either 'Your music' library or other playlists).
 
 Cool use cases:

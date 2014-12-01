@@ -2,7 +2,8 @@
 
 var shufflifyApp = angular.module('shufflifyApp');
 
-shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifySources, SpotifyLibrary,
+shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySources", "SpotifyLibrary", "SpotifyPlaylist",
+			"AccessToken", "$modal", "$q", function ($scope, $http, $location, SpotifySources, SpotifyLibrary,
 		SpotifyPlaylist, AccessToken, $modal, $q) {
 	$scope.host = $location.host();
 	$scope.localhost = $scope.host == '127.0.0.1' || $scope.host == 'localhost';
@@ -31,7 +32,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 	$scope.$on('oauth:profile', loadProfile);
 
 	function loadProfile(event, profile) {
-		console.log('Profile ' + profile);
 		$http.defaults.headers.common.Authorization = 'Bearer ' + AccessToken.get().access_token;
 		$scope.profile = profile;
 		$scope.loadSpotifyData();
@@ -50,7 +50,6 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 		}
 		$scope.spotifyDataStartedLoading = true;
 		SpotifySources.get().then(function (sources) {
-			console.log(JSON.stringify(sources));
 			$scope.spotifyData.sources = sources.merged;
 			$scope.spotifyData.library = sources.library;
 			$scope.spotifyData.playlists = sources.playlists;
@@ -112,7 +111,7 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 		});
 	};
 
-	var confirmDialogCtrl = function ($scope, $modalInstance, selectionData) {
+	var confirmDialogCtrl = ["$scope", "$modalInstance", "selectionData", function ($scope, $modalInstance, selectionData) {
 		$scope.selectionData = selectionData;
 
 		$scope.ok = function () {
@@ -122,9 +121,9 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 		$scope.cancel = function () {
 			$modalInstance.dismiss('cancel');
 		};
-	};
+	}];
 
-	var progressDialogCtrl = function ($scope, $modalInstance, selectionData) {
+	var progressDialogCtrl = ["$scope", "$modalInstance", "selectionData", function ($scope, $modalInstance, selectionData) {
 		$scope.selectionData = selectionData;
 
 		$scope.progressData = {
@@ -141,7 +140,7 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 
 		$scope.$watchCollection("[progressData.num_tracks_read, progressData.total_songs]", function () {
 			$scope.progressData.percent_tracks_read =
-				$scope.progressData.num_tracks_read / $scope.progressData.total_songs * 100;
+					$scope.progressData.num_tracks_read / $scope.progressData.total_songs * 100;
 		});
 
 		$scope.$watchCollection("[progressData.num_tracks_written, progressData.total_songs]", function () {
@@ -176,7 +175,7 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 		$scope.ok = function () {
 			$modalInstance.close();
 		};
-	};
+	}];
 
 	$scope.showConfirmDialog = function() {
 		var confirmDialog = $modal.open({
@@ -284,4 +283,4 @@ shufflifyApp.controller('MainCtrl', function ($scope, $http, $location, SpotifyS
 			);
 		});
 	};
-});
+}]);

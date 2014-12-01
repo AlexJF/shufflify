@@ -8,7 +8,7 @@
     "jquery": "1.10.2",
     "sass-bootstrap": "3.0.2",
     "angular-route": "1.2.26",
-    "oauth-ng": "0.3.4",
+    "oauth-ng": "0.3.5",
     "angular-ui-select": "0.8.3",
     "angular-sanitize": "1.2.26",
     "angular-truncate": "*",
