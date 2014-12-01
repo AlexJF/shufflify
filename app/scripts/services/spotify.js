@@ -20,16 +20,20 @@ spotifyServices.factory('SpotifyLibrary', ["$q", "$http", function ($q, $http) {
 				params: {limit: 1}
 			});
 
-			promise.then(function (result) {
-				cache.info = {
-					id: 'library',
-					name: 'Your music',
-					type: 'library',
-					total: result.data.total
-				};
+			promise.then(
+					function (result) {
+						cache.info = {
+							id: 'library',
+							name: 'Your music',
+							type: 'library',
+							total: result.data.total
+						};
 
-				deferred.resolve(cache.info);
-			});
+						deferred.resolve(cache.info);
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		if (cache.info && !force) {
@@ -54,50 +58,58 @@ spotifyServices.factory('SpotifyLibrary', ["$q", "$http", function ($q, $http) {
 
 			var current_request = requests.shift();
 			$http.get(url, {params: {offset: current_request.offset, limit: current_request.limit}
-			}).then(function (result) {
-				var handled = 0;
+			}).then(
+					function (result) {
+						var handled = 0;
 
-				for (var i = 0; i < result.data.items.length; ++i) {
-					// We are only interested in some of the tracks in the playlist, not all.
-					// Skip those we are not interested in.
-					if (!(i in current_request.items)) {
-						continue;
-					}
+						for (var i = 0; i < result.data.items.length; ++i) {
+							// We are only interested in some of the tracks in the playlist, not all.
+							// Skip those we are not interested in.
+							if (!(i in current_request.items)) {
+								continue;
+							}
 
-					var playlist_track = result.data.items[i];
-					library_tracks.push(playlist_track.track.uri);
-					++handled;
-				}
+							var playlist_track = result.data.items[i];
+							library_tracks.push(playlist_track.track.uri);
+							++handled;
+						}
 
-				deferred.notify({
-					delta: handled,
-					current: library_tracks.length,
-					total: positions.length
-				});
+						deferred.notify({
+							delta: handled,
+							current: library_tracks.length,
+							total: positions.length
+						});
 
-				_getSomeTracks(requests);
-			});
+						_getSomeTracks(requests);
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		function _getAllTracks() {
-			$http.get(url).then(function (result) {
-				result.data.items.forEach(function (playlist_track) {
-					library_tracks.push(playlist_track.track.uri);
-				});
+			$http.get(url).then(
+					function (result) {
+						result.data.items.forEach(function (playlist_track) {
+							library_tracks.push(playlist_track.track.uri);
+						});
 
-				deferred.notify({
-					delta: result.data.items.length,
-					current: library_tracks.length,
-					total: result.total
-				});
+						deferred.notify({
+							delta: result.data.items.length,
+							current: library_tracks.length,
+							total: result.total
+						});
 
-				if (result.next) {
-					url = result.next;
-					_getAllTracks();
-				} else {
-					deferred.resolve(library_tracks);
-				}
-			});
+						if (result.next) {
+							url = result.next;
+							_getAllTracks();
+						} else {
+							deferred.resolve(library_tracks);
+						}
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		if (positions) {
@@ -163,7 +175,8 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 			id: playlistData.id,
 			name: playlistData.name,
 			type: 'playlist',
-			total: playlistData.tracks.total
+			total: playlistData.tracks.total,
+			owner: playlistData.owner.id
 		};
 	}
 
@@ -172,20 +185,24 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 		var url = 'https://api.spotify.com/v1/users/' + Profile.get().id + '/playlists?limit=50';
 
 		function _getPlaylistsInfo() {
-			$http.get(url).then(function (result) {
-				result.data.items.forEach(function (playlist) {
-					var parsed_playlist = parsePlaylist(playlist);
-					cache.playlists_info.push(parsed_playlist);
-				});
+			$http.get(url).then(
+					function (result) {
+						result.data.items.forEach(function (playlist) {
+							var parsed_playlist = parsePlaylist(playlist);
+							cache.playlists_info.push(parsed_playlist);
+						});
 
-				if (result.next) {
-					url = result.next;
-					_getPlaylistsInfo();
-				} else {
-					sortPlaylists();
-					deferred.resolve(cache.playlists_info);
-				}
-			});
+						if (result.next) {
+							url = result.next;
+							_getPlaylistsInfo();
+						} else {
+							sortPlaylists();
+							deferred.resolve(cache.playlists_info);
+						}
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 
@@ -199,11 +216,11 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 		return deferred.promise;
 	}
 
-	function getPlaylistTracks(playlist_id, positions) {
+	function getPlaylistTracks(playlist, positions) {
 		var deferred = $q.defer();
 		var playlist_tracks = [];
 		var fields = "items.track.uri";
-		var url = 'https://api.spotify.com/v1/users/' + Profile.get().id + '/playlists/' + playlist_id + '/tracks';
+		var url = 'https://api.spotify.com/v1/users/' + playlist.owner + '/playlists/' + playlist.id + '/tracks';
 
 		function _getSomePlaylistTracks(requests) {
 			if (requests.length <= 0) {
@@ -213,50 +230,57 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 
 			var current_request = requests.shift();
 			$http.get(url, {params: {fields: fields, offset: current_request.offset, limit: current_request.limit}
-			}).then(function (result) {
-				var handled = 0;
+			}).then(
+					function (result) {
+						var handled = 0;
 
-				for (var i = 0; i < result.data.items.length; ++i) {
-					// We are only interested in some of the tracks in the playlist, not all.
-					// Skip those we are not interested in.
-					if (!(i in current_request.items)) {
-						continue;
-					}
+						for (var i = 0; i < result.data.items.length; ++i) {
+							// We are only interested in some of the tracks in the playlist, not all.
+							// Skip those we are not interested in.
+							if (!(i in current_request.items)) {
+								continue;
+							}
 
-					var playlist_track = result.data.items[i];
-					playlist_tracks.push(playlist_track.track.uri);
-					++handled;
-				}
+							var playlist_track = result.data.items[i];
+							playlist_tracks.push(playlist_track.track.uri);
+							++handled;
+						}
 
-				deferred.notify({
-					delta: handled,
-					current: playlist_tracks.length,
-					total: positions.length
-				});
+						deferred.notify({
+							delta: handled,
+							current: playlist_tracks.length,
+							total: positions.length
+						});
 
-				_getSomePlaylistTracks(requests);
-			});
+						_getSomePlaylistTracks(requests);
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		function _getAllPlaylistTracks() {
-			$http.get(url, {params: {fields: fields}}).then(function (result) {
-				result.data.items.forEach(function (playlist_track) {
-					playlist_tracks.push(playlist_track.track.uri);
-				});
+			$http.get(url, {params: {fields: fields}}).then(
+					function (result) {
+						result.data.items.forEach(function (playlist_track) {
+							playlist_tracks.push(playlist_track.track.uri);
+						});
+						deferred.notify({
+							delta: result.data.items.length,
+							current: playlist_tracks.length,
+							total: result.total
+						});
 
-				deferred.notify({
-					delta: result.data.items.length,
-					current: playlist_tracks.length,
-					total: result.total
-				});
-
-				if (result.next) {
-					url = result.next;
-					_getAllPlaylistTracks();
-				} else {
-					deferred.resolve(playlist_tracks);
-				}
-			});
+						if (result.next) {
+							url = result.next;
+							_getAllPlaylistTracks();
+						} else {
+							deferred.resolve(playlist_tracks);
+						}
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		if (positions) {
@@ -336,15 +360,19 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 			}
 
 			var current_batch = track_uris.splice(0, MAX_TRACKS_PER_REQUEST);
-			$http.post(url, {uris: current_batch}).then(function (result) {
-				num_tracks_added += current_batch.length;
-				deferred.notify({
-					delta: current_batch.length,
-					current: num_tracks_added,
-					total: track_uris.length
-				});
-				_addPlaylistTracks(track_uris);
-			});
+			$http.post(url, {uris: current_batch}).then(
+					function (result) {
+						num_tracks_added += current_batch.length;
+						deferred.notify({
+							delta: current_batch.length,
+							current: num_tracks_added,
+							total: track_uris.length
+						});
+						_addPlaylistTracks(track_uris);
+					},
+					function (error) {
+						deferred.reject(error);
+					});
 		}
 
 		_addPlaylistTracks(track_uris);
@@ -422,7 +450,7 @@ spotifyServices.factory('SpotifySources', ["$q", "SpotifyLibrary", "SpotifyPlayl
 		if (source.type == 'library') {
 			return SpotifyLibrary.getTracks(track_positions);
 		} else {
-			return SpotifyPlaylist.getPlaylistTracks(source.id, track_positions);
+			return SpotifyPlaylist.getPlaylistTracks(source, track_positions);
 		}
 	}
 }]);

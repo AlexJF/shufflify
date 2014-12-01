@@ -219,12 +219,12 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 			chosen_songs.sort(function (a, b) { return a - b; });
 
 			var total_chosen_songs = chosen_songs.length;
+			var current_offset = 0;
 			var i = 0;
 
 			var promises = [];
 
 			$scope.selectionData.sources.forEach(function (source) {
-				var current_offset = i;
 				var source_total = source.total;
 				var source_songs = [];
 
@@ -242,9 +242,14 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 					}
 				}
 
-				promises.push(SpotifySources.getSourceTracks(source, source_songs).then(null, null, function (progress) {
-					$scope.$broadcast("progress:tracks_read", progress.delta);
-				}));
+				current_offset += source_total;
+
+				promises.push(SpotifySources.getSourceTracks(source, source_songs).then(
+						null,
+						null,
+						function (progress) {
+							$scope.$broadcast("progress:tracks_read", progress.delta);
+						}));
 			});
 
 			$q.all(promises).then(
@@ -258,12 +263,18 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 							track_uris = track_uris.concat(tracks);
 						});
 
+						// Filter strange results out
+						track_uris = track_uris.filter(function (track) {
+							return track != "spotify:track:null";
+						});
+
 						SpotifyPlaylist.setPlaylistTracks($scope.selectionData.destination.id, track_uris).then(
 								// Success
 								function (result) {
 									$scope.$broadcast("progress:finished_write");
 								},
 								function (error) {
+									console.log("Write error: " + error);
 									$scope.$broadcast("progress:write_error", error);
 								},
 								function (progress) {
@@ -275,6 +286,7 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 					},
 					// Error
 					function (error) {
+						console.log("Read error: " + error);
 						$scope.$broadcast("progress:read_error", error);
 					},
 					function (progress) {
