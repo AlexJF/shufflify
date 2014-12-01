@@ -77,7 +77,7 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		}
 	});
 
-	var addPlaylistDialogCtrl = function ($scope, $modalInstance, selectionData) {
+	var addPlaylistDialogCtrl = ["$scope", "$modalInstance", "selectionData", function ($scope, $modalInstance, selectionData) {
 		$scope.selectionData = selectionData;
 		$scope.playlistInfo = {
 			name: null
@@ -92,7 +92,7 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		$scope.cancel = function () {
 			$modalInstance.dismiss('cancel');
 		};
-	};
+	}];
 
 	$scope.addPlaylist = function (name) {
 		var addPlaylistDialog = $modal.open({
