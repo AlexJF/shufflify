@@ -229,7 +229,9 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 			}
 
 			var current_request = requests.shift();
-			$http.get(url, {params: {fields: fields, offset: current_request.offset, limit: current_request.limit}
+			//$http.get(url, {params: {fields: fields, offset: current_request.offset, limit: current_request.limit}
+			// TODO: Temporarily removed fields parameter due to Spotify Web API bug.
+			$http.get(url, {params: {offset: current_request.offset, limit: current_request.limit}
 			}).then(
 					function (result) {
 						var handled = 0;
@@ -238,10 +240,17 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 							// We are only interested in some of the tracks in the playlist, not all.
 							// Skip those we are not interested in.
 							if (!(i in current_request.items)) {
+								console.log("Skipping " + i);
 								continue;
 							}
 
 							var playlist_track = result.data.items[i];
+
+							// TODO: Spotify Web API bug
+							if (playlist_track.track == null) {
+								continue;
+							}
+
 							playlist_tracks.push(playlist_track.track.uri);
 							++handled;
 						}
@@ -260,7 +269,9 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 		}
 
 		function _getAllPlaylistTracks() {
-			$http.get(url, {params: {fields: fields}}).then(
+			//$http.get(url, {params: {fields: fields}}).then(
+			// TODO: Temporarily removed fields parameter due to Spotify Web API bug
+			$http.get(url).then(
 					function (result) {
 						result.data.items.forEach(function (playlist_track) {
 							playlist_tracks.push(playlist_track.track.uri);

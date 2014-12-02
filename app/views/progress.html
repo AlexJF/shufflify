@@ -16,6 +16,9 @@
 			<strong>SUCCESS!</strong> The playlist "{{selectionData.destination.name | characters:70}}" now contains
 			{{selectionData.destination.total}} songs.
 		</div>
+		<div class="alert alert-info" ng-show="progressData.finished_read && progressData.finished_write && (progressData.percent_tracks_read != 100 || progressData.percent_tracks_written != 100)">
+			<strong>INFO!</strong> Due to bugs in the Spotify Web API, some invalid track data was returned and so not all the tracks may have been included. The issue has been reported and we're waiting for a solution.
+		</div>
 		<div class="alert alert-danger" ng-show="progressData.read_error">
 			<strong>ERROR!</strong> Something bad occurred while reading track data: {{progressData.read_error}}
 		</div>
