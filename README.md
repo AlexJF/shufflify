@@ -8,6 +8,8 @@ Cool use cases:
 
 * Work around the 3333 offline-saved songs per-device by choosing a random 3333 track sample from your music library.
 * Limit the size of your offline-saved collection by offline-saving a random limited-size sample from your music library.
+* Shuffle the order of the tracks in a playlist in a truly random way (not according to Spotify's sometimes weird randomness that plays the same track several times).
+* Join several playlists together without duplicates or remove duplicates from a single playlist.
 
 ## External libs
 
