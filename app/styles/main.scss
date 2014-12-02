@@ -188,6 +188,34 @@ oauth {
 	}
 	#sources-value {
 		@include make-sm-column(12);
+
+		display: table;
+		white-space: nowrap;
+
+		#sources-picker {
+			display: table-cell;
+			width: 100%;
+			padding-right: 1rem;
+			vertical-align: top;
+			white-space: normal;
+		}
+
+		#sources-select-all-button {
+			background-color: $site-alternative-color;
+			border-color: $site-alternative-color;
+			display: table-cell;
+			width: 4rem;
+			vertical-align: top;
+			margin-right: 1rem;
+		}
+
+		#sources-clear-all-button {
+			background-color: $site-alternative-color;
+			border-color: $site-alternative-color;
+			display: table-cell;
+			width: 4rem;
+			vertical-align: top;
+		}
 	}
 }
 
@@ -207,19 +235,14 @@ oauth {
 			padding-right: 1rem;
 			vertical-align: top;
 		}
-	}
 
-	#new-playlist-button {
-		background-color: $site-alternative-color;
-		border-color: $site-alternative-color;
-		display: table-cell;
-		width: 4rem;
-		vertical-align: top;
-	}
-
-	#new-playlist-button-wrapper {
-		@include make-sm-column(2);
-
+		#new-playlist-button {
+			background-color: $site-alternative-color;
+			border-color: $site-alternative-color;
+			display: table-cell;
+			width: 4rem;
+			vertical-align: top;
+		}
 	}
 }
 

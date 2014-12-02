@@ -77,6 +77,14 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		}
 	});
 
+	$scope.selectAllSources = function () {
+		$scope.selectionData.sources = angular.extend($scope.spotifyData.sources);
+	}
+
+	$scope.clearSourcesSelection = function () {
+		$scope.selectionData.sources = undefined;
+	}
+
 	var addPlaylistDialogCtrl = ["$scope", "$modalInstance", "selectionData", function ($scope, $modalInstance, selectionData) {
 		$scope.selectionData = selectionData;
 		$scope.playlistInfo = {

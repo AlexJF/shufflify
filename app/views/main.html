@@ -37,16 +37,26 @@
 				<h3>Sources:</h3>
 			</div>
 			<div id="sources-value">
-				<ui-select multiple ng-model="selectionData.sources">
-					<ui-select-match placeholder="Select source...">{{$item.name | characters: 70}} &lt;{{$item.total}}
-						songs&gt;</ui-select-match>
-					<ui-select-choices repeat="source in spotifyData.sources | filter: {name: $select.search}">
-						<div ng-bind-html="source.name | characters: 70 | highlight: $select.search"></div>
-						<small>
-							num songs: {{source.total}}
-						</small>
-					</ui-select-choices>
-				</ui-select>
+				<div id="sources-picker">
+					<ui-select multiple ng-model="selectionData.sources">
+						<ui-select-match placeholder="Select source...">{{$item.name | characters: 70}} &lt;{{$item.total}}
+							songs&gt;</ui-select-match>
+						<ui-select-choices repeat="source in spotifyData.sources | filter: {name: $select.search}">
+							<div ng-bind-html="source.name | characters: 70 | highlight: $select.search"></div>
+							<small>
+								num songs: {{source.total}}
+							</small>
+						</ui-select-choices>
+					</ui-select>
+				</div>
+				<button class="btn btn-success" id="sources-select-all-button" ng-click="selectAllSources()" title="Select all">
+					<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+					<span class="sr-only">Select all</span>
+				</button>
+				<button class="btn btn-success" id="sources-clear-all-button" ng-click="clearSourcesSelection()" title="Clear all">
+					<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+					<span class="sr-only">Clear all</span>
+				</button>
 			</div>
 		</div>
 		<p>
@@ -73,7 +83,7 @@
 						</ui-select-choices>
 					</ui-select>
 				</div>
-				<button class="btn btn-success" id="new-playlist-button" ng-click="addPlaylist()">
+				<button class="btn btn-success" id="new-playlist-button" ng-click="addPlaylist()" title="Add new playlist">
 					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
 					<span class="sr-only">Add new playlist</span>
 				</button>
