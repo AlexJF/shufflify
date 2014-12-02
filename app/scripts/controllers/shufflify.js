@@ -182,6 +182,8 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 
 		// The total songs to write can be updated by duplicate removal.
 		$scope.$on("progress:new_total_write_count", function (event, total_songs_to_write) {
+			console.log("Old total write count: " + $scope.progressData.total_songs_to_write);
+			console.log("New total write count: " + total_songs_to_write);
 			$scope.progressData.total_songs_to_write = total_songs_to_write;
 		});
 
@@ -323,6 +325,7 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 						// (Re)shuffle to introduce randomness
 						if (track_uris.length > $scope.selectionData.totalSongsInDestination) {
 							track_uris = window.chance.pick(track_uris, $scope.selectionData.totalSongsInDestination);
+							$scope.$broadcast("progress:new_total_write_count", track_uris.length);
 						} else {
 							track_uris = window.chance.shuffle(track_uris);
 						}
