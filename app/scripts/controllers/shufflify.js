@@ -2,9 +2,7 @@
 
 var shufflifyApp = angular.module('shufflifyApp');
 
-shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySources", "SpotifyLibrary", "SpotifyPlaylist",
-			"AccessToken", "$modal", "$q", function ($scope, $http, $location, SpotifySources, SpotifyLibrary,
-		SpotifyPlaylist, AccessToken, $modal, $q) {
+shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySources", "SpotifyLibrary", "SpotifyPlaylist", "AccessToken", "$modal", "$q", function ($scope, $http, $location, SpotifySources, SpotifyLibrary, SpotifyPlaylist, AccessToken, $modal, $q) {
 	$scope.host = $location.host();
 	$scope.localhost = $scope.host == '127.0.0.1' || $scope.host == 'localhost';
 
@@ -19,7 +17,8 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		totalSongsInSources: 0,
 		destination: null,
 		totalSongsInDestination: 0,
-		maxSongsDestination: null
+		maxSongsDestination: null,
+		ensureUnique: false
 	};
 
 	$scope.newPlaylistName = "";
@@ -79,11 +78,11 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 
 	$scope.selectAllSources = function () {
 		$scope.selectionData.sources = angular.extend($scope.spotifyData.sources);
-	}
+	};
 
 	$scope.clearSourcesSelection = function () {
 		$scope.selectionData.sources = undefined;
-	}
+	};
 
 	var addPlaylistDialogCtrl = ["$scope", "$modalInstance", "selectionData", function ($scope, $modalInstance, selectionData) {
 		$scope.selectionData = selectionData;
@@ -135,7 +134,8 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		$scope.selectionData = selectionData;
 
 		$scope.progressData = {
-			total_songs: $scope.selectionData.totalSongsInDestination,
+			total_songs_to_read: $scope.selectionData.ensureUnique ? $scope.selectionData.totalSongsInSources : $scope.selectionData.totalSongsInDestination,
+			total_songs_to_write: $scope.selectionData.totalSongsInDestination,
 			num_tracks_read: 0,
 			num_tracks_written: 0,
 			percent_tracks_read: 0,
@@ -146,14 +146,14 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 			read_error: null
 		};
 
-		$scope.$watchCollection("[progressData.num_tracks_read, progressData.total_songs]", function () {
+		$scope.$watchCollection("[progressData.num_tracks_read, progressData.total_songs_to_read]", function () {
 			$scope.progressData.percent_tracks_read =
-					$scope.progressData.num_tracks_read / $scope.progressData.total_songs * 100;
+					$scope.progressData.num_tracks_read / $scope.progressData.total_songs_to_read * 100;
 		});
 
-		$scope.$watchCollection("[progressData.num_tracks_written, progressData.total_songs]", function () {
+		$scope.$watchCollection("[progressData.num_tracks_written, progressData.total_songs_to_write]", function () {
 			$scope.progressData.percent_tracks_written =
-					$scope.progressData.num_tracks_written / $scope.progressData.total_songs * 100;
+					$scope.progressData.num_tracks_written / $scope.progressData.total_songs_to_write * 100;
 		});
 
 		$scope.$on("progress:tracks_read", function (event, delta) {
@@ -180,10 +180,81 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 			$scope.progressData.write_error = error;
 		});
 
+		// The total songs to write can be updated by duplicate removal.
+		$scope.$on("progress:new_total_write_count", function (event, total_songs_to_write) {
+			$scope.progressData.total_songs_to_write = total_songs_to_write;
+		});
+
 		$scope.ok = function () {
 			$modalInstance.close();
 		};
 	}];
+
+	function getSomeTracksFromSources() {
+		var songs = [];
+		var songNum = 0;
+
+		$scope.selectionData.sources.forEach(function (source) {
+			for (var i = 0; i < source.total; ++i) {
+				songs.push(songNum++);
+			}
+		});
+
+		var chosen_songs = window.chance.pick(songs, $scope.selectionData.totalSongsInDestination);
+		// Sort by integers
+		chosen_songs.sort(function (a, b) { return a - b; });
+
+		var total_chosen_songs = chosen_songs.length;
+		var current_offset = 0;
+		var i = 0;
+
+		var promises = [];
+
+		$scope.selectionData.sources.forEach(function (source) {
+			var source_total = source.total;
+			var source_songs = [];
+
+			while (i < total_chosen_songs) {
+				var current_song_pos_in_source = chosen_songs[i] - current_offset;
+
+				// If the song we're currently looking at belongs to a different source, move on
+				if (current_song_pos_in_source >= source_total) {
+					break;
+				}
+				// Else, add it to the source_songs collection
+				else {
+					source_songs.push(current_song_pos_in_source);
+					++i;
+				}
+			}
+
+			current_offset += source_total;
+
+			promises.push(SpotifySources.getSourceTracks(source, source_songs).then(
+					null,
+					null,
+					function (progress) {
+						$scope.$broadcast("progress:tracks_read", progress.delta);
+					}));
+		});
+
+		return promises;
+	}
+
+	function getAllTracksFromSources() {
+		var promises = [];
+
+		$scope.selectionData.sources.forEach(function (source) {
+			promises.push(SpotifySources.getSourceTracks(source).then(
+					null,
+					null,
+					function (progress) {
+						$scope.$broadcast("progress:tracks_read", progress.delta);
+					}));
+		});
+
+		return promises;
+	}
 
 	$scope.showConfirmDialog = function() {
 		var confirmDialog = $modal.open({
@@ -198,9 +269,6 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 		});
 
 		confirmDialog.result.then(function () {
-			var songs = [];
-			var songNum = 0;
-
 			var progressDialog = $modal.open({
 				templateUrl: "views/progress.html",
 				controller: progressDialogCtrl,
@@ -215,50 +283,15 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 				}
 			});
 
-			// TODO: Make this more efficient if we're considering all songs, not just a sample
-			$scope.selectionData.sources.forEach(function (source) {
-				for (var i = 0; i < source.total; ++i) {
-					songs.push(songNum++);
-				}
-			});
-
-			var chosen_songs = window.chance.pick(songs, $scope.selectionData.totalSongsInDestination);
-			// Sort by integers
-			chosen_songs.sort(function (a, b) { return a - b; });
-
-			var total_chosen_songs = chosen_songs.length;
-			var current_offset = 0;
-			var i = 0;
-
-			var promises = [];
-
-			$scope.selectionData.sources.forEach(function (source) {
-				var source_total = source.total;
-				var source_songs = [];
-
-				while (i < total_chosen_songs) {
-					var current_song_pos_in_source = chosen_songs[i] - current_offset;
-
-					// If the song we're currently looking at belongs to a different source, move on
-					if (current_song_pos_in_source >= source_total) {
-						break;
-					}
-					// Else, add it to the source_songs collection
-					else {
-						source_songs.push(current_song_pos_in_source);
-						++i;
-					}
-				}
-
-				current_offset += source_total;
-
-				promises.push(SpotifySources.getSourceTracks(source, source_songs).then(
-						null,
-						null,
-						function (progress) {
-							$scope.$broadcast("progress:tracks_read", progress.delta);
-						}));
-			});
+			var destination_contains_all =
+					$scope.selectionData.totalSongsInSources == $scope.selectionData.totalSongsInDestination;
+			var ensure_unique = $scope.selectionData.ensureUnique;
+			var promises = null;
+			if (destination_contains_all || ensure_unique) {
+				promises = getAllTracksFromSources();
+			} else {
+				promises = getSomeTracksFromSources();
+			}
 
 			$q.all(promises).then(
 					// Success
@@ -275,6 +308,24 @@ shufflifyApp.controller('MainCtrl', ["$scope", "$http", "$location", "SpotifySou
 						track_uris = track_uris.filter(function (track) {
 							return track != "spotify:track:null";
 						});
+
+						if (ensure_unique) {
+							// Remove duplicates by sorting and deleting those elements
+							// that are preceded by an element with the same value.
+							// From: http://stackoverflow.com/a/9229821/441265
+							track_uris = track_uris.sort().filter(function(item, pos) {
+								return !pos || item != track_uris[pos - 1];
+							});
+
+							$scope.$broadcast("progress:new_total_write_count", track_uris.length);
+						}
+
+						// (Re)shuffle to introduce randomness
+						if (track_uris.length > $scope.selectionData.totalSongsInDestination) {
+							track_uris = window.chance.pick(track_uris, $scope.selectionData.totalSongsInDestination);
+						} else {
+							track_uris = window.chance.shuffle(track_uris);
+						}
 
 						SpotifyPlaylist.setPlaylistTracks($scope.selectionData.destination.id, track_uris).then(
 								// Success

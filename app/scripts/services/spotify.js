@@ -90,18 +90,25 @@ spotifyServices.factory('SpotifyLibrary', ["$q", "$http", function ($q, $http) {
 		function _getAllTracks() {
 			$http.get(url).then(
 					function (result) {
+						var handled = 0;
+
 						result.data.items.forEach(function (playlist_track) {
+							if (playlist_track.track == null) {
+								return;
+							}
+
 							library_tracks.push(playlist_track.track.uri);
+							++handled;
 						});
 
 						deferred.notify({
-							delta: result.data.items.length,
+							delta: handled,
 							current: library_tracks.length,
 							total: result.total
 						});
 
-						if (result.next) {
-							url = result.next;
+						if (result.data.next) {
+							url = result.data.next;
 							_getAllTracks();
 						} else {
 							deferred.resolve(library_tracks);
@@ -192,8 +199,8 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 							cache.playlists_info.push(parsed_playlist);
 						});
 
-						if (result.next) {
-							url = result.next;
+						if (result.data.next) {
+							url = result.data.next;
 							_getPlaylistsInfo();
 						} else {
 							sortPlaylists();
@@ -273,17 +280,25 @@ spotifyServices.factory('SpotifyPlaylist', ["$q", "$http", "Profile", function (
 			// TODO: Temporarily removed fields parameter due to Spotify Web API bug
 			$http.get(url).then(
 					function (result) {
+						var handled = 0;
+
 						result.data.items.forEach(function (playlist_track) {
+							if (playlist_track.track == null) {
+								return;
+							}
+
 							playlist_tracks.push(playlist_track.track.uri);
+							++handled;
 						});
+
 						deferred.notify({
-							delta: result.data.items.length,
+							delta: handled,
 							current: playlist_tracks.length,
 							total: result.total
 						});
 
-						if (result.next) {
-							url = result.next;
+						if (result.data.next) {
+							url = result.data.next;
 							_getAllPlaylistTracks();
 						} else {
 							deferred.resolve(playlist_tracks);

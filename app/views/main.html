@@ -100,6 +100,24 @@
 				<input type="text" class="form-control" id="max-songs-destination"
 				   ng-model="selectionData.maxSongsDestination" placeholder="Size of resulting playlist (Default: unlimited)"/>
 			</div>
+
+			<div class="option">
+				<label for="ensure-unique">
+					<input type="checkbox" id="ensure-unique" ng-model="selectionData.ensureUnique" />
+					Ensure tracks are unique in destination
+				</label>
+				<div class="alert alert-warning" ng-show="selectionData.ensureUnique">
+					<p>
+						<strong>WARNING:</strong>
+						If you know that your sources don't have duplicates or have very few ones, consider unchecking
+						this option for significant speedups.
+					</p>
+					<p>
+						Having this option checked requires getting track info for ALL tracks in the source set rather
+						than just enough tracks to fill the destination.
+					</p>
+				</div>
+			</div>
 		</div>
 
 		<button

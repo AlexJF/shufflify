@@ -253,6 +253,8 @@ oauth {
 
 	div.option {
 		@include make-sm-column(12);
+
+		margin-bottom: 1rem;
 	}
 }
 

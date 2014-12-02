@@ -21,6 +21,11 @@
 			No sources selected
 		</li>
 	</ul>
+	<p ng-show="selectionData.ensureUnique">
+		I will ensure that among the {{selectionData.totalSongsInDestination}} tracks to write to the destination there
+		are <strong>no duplicate tracks</strong>. However, if there are not enough non-duplicate tracks to fill the
+		destination, its final track count will necessarily be less than {{selectionData.totalSongsInDestination}}.
+	</p>
 	<p>
 		Based on an average size of 5MB per track, the "{{selectionData.destination.name | characters:70}}"
 		playlist should end up with {{selectionData.totalSongsInDestination * 5}} MB
