@@ -255,6 +255,11 @@ oauth {
 		@include make-sm-column(12);
 
 		margin-bottom: 1rem;
+
+		input[type='checkbox'] {
+			margin-top: 0px;
+			margin-right: 0.5rem;
+		}
 	}
 }
 
