@@ -386,7 +386,9 @@ module.exports = function (grunt) {
     'clean:dist',
     'bower-install',
     'useminPrepare',
-    'concurrent:dist',
+    'compass:dist',
+    'imagemin',
+    'svgmin',
     'autoprefixer',
     'concat',
     'ngmin',
@@ -400,7 +402,6 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
-    'force:on',
     'build'
   ]);
 };
