@@ -32,7 +32,7 @@
     "tag": "0.3.5",
     "commit": "22296b927dd9f690f04c52470626af0000e306ca"
   },
-  "_source": "git://github.com/andreareginato/oauth-ng.git",
+  "_source": "https://github.com/andreareginato/oauth-ng.git",
   "_target": "0.3.5",
   "_originalSource": "oauth-ng"
 }

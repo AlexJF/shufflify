@@ -13,7 +13,7 @@
     "branch": "master",
     "commit": "997d4b4bda5d3508193d8b2120156696f8e14de3"
   },
-  "_source": "git://github.com/sparkalow/angular-truncate.git",
+  "_source": "https://github.com/sparkalow/angular-truncate.git",
   "_target": "*",
   "_originalSource": "angular-truncate"
 }

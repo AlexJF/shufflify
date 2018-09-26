@@ -1,4 +1,4 @@
-//  Chance.js 0.6.1
+//  Chance.js 0.6.4
 //  http://chancejs.com
 //  (c) 2013 Victor Quinn
 //  Chance may be freely distributed or modified under the MIT license.
@@ -22,27 +22,42 @@
             return new Chance(seed);
         }
 
-        if (seed !== undefined) {
-            // If we were passed a generator rather than a seed, use it.
-            if (typeof seed === 'function') {
-                this.random = seed;
+        // if user has provided a function, use that as the generator
+        if (typeof seed === 'function') {
+            this.random = seed;
+            return this;
+        }
+
+        var seedling;
+        
+        if (arguments.length) {
+            // set a starting value of zero so we can add to it
+            this.seed = 0;
+        }
+        // otherwise, leave this.seed blank so that MT will recieve a blank
+
+        for (var i = 0; i < arguments.length; i++) {
+            seedling = 0;
+            if (typeof arguments[i] === 'string') {
+                for (var j = 0; j < arguments[i].length; j++) {
+                    seedling += (arguments[i].length - j) * arguments[i].charCodeAt(j);
+                }
             } else {
-                this.seed = seed;
+                seedling = this.seed;
             }
+            this.seed += (arguments.length - i) * seedling;
         }
 
         // If no generator function was provided, use our MT
-        if (typeof this.random === 'undefined') {
-            this.mt = this.mersenne_twister(seed);
-            this.random = function () {
-                return this.mt.random(this.seed);
-            };
-        }
+        this.mt = this.mersenne_twister(this.seed);
+        this.random = function () {
+            return this.mt.random(this.seed);
+        };
 
         return this;
     }
 
-    Chance.prototype.VERSION = "0.6.1";
+    Chance.prototype.VERSION = "0.6.4";
 
     // Random helper functions
     function initOptions(options, defaults) {
@@ -548,7 +563,7 @@
 
     // -- End Person --
 
-    // -- Web --
+    // -- Mobile --
     // Android GCM Registration ID
     Chance.prototype.android_id = function (options) {
         return "APA91" + this.string({ pool: "0123456789abcefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_", length: 178 });
@@ -559,6 +574,24 @@
         return this.string({ pool: "abcdef1234567890", length: 64 });
     };
 
+    // Windows Phone 8 ANID2
+    Chance.prototype.wp8_anid2 = function (options) {
+        return btoa( this.hash( { length : 32 } ) );
+    };
+
+    // Windows Phone 7 ANID
+    Chance.prototype.wp7_anid = function (options) {
+        return 'A=' + this.guid().replace(/-/g, '').toUpperCase() + '&E=' + this.hash({ length:3 }) + '&W=' + this.integer({ min:0, max:9 });
+    };
+
+    // BlackBerry Device PIN
+    Chance.prototype.bb_pin = function (options) {
+        return this.hash({ length: 8 });
+    };
+
+    // -- End Mobile --
+
+    // -- Web --
     Chance.prototype.color = function (options) {
         function gray(value, delimiter) {
             return [value, value, value].join(delimiter || '');
@@ -722,7 +755,7 @@
         switch (options.country) {
             case 'fr':
                 if (!options.mobile) {
-                    numPick = chance.pick([
+                    numPick = this.pick([
                         // Valid zone and département codes.
                         '01' + this.pick(['30', '34', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '53', '55', '56', '58', '60', '64', '69', '70', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83']) + self.string({ pool: '0123456789', length: 6}),
                         '02' + this.pick(['14', '18', '22', '23', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '40', '41', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '56', '57', '61', '62', '69', '72', '76', '77', '78', '85', '90', '96', '97', '98', '99']) + self.string({ pool: '0123456789', length: 6}),
@@ -738,7 +771,7 @@
                 }
             case 'uk':
                 if (!options.mobile) {
-                    numPick = chance.pick([
+                    numPick = this.pick([
                         //valid area codes of major cities/counties followed by random numbers in required format.
                         { area: '01' + this.character({ pool: '234569' }) + '1 ', sections: [3,4] },
                         { area: '020 ' + this.character({ pool: '378' }), sections: [3,4] },
@@ -756,7 +789,7 @@
                     ]);
                     return options.formatted ? ukNum(numPick) : ukNum(numPick).replace(' ', '', 'g');
                 } else {
-                    numPick = chance.pick([
+                    numPick = this.pick([
                         { area: '07' + this.pick(['4','5','7','8','9']), sections: [2,6] },
                         { area: '07624 ', sections: [6] }
                     ]);
