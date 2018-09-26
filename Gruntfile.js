@@ -8,6 +8,7 @@
 // 'test/spec/**/*.js'
 
 module.exports = function (grunt) {
+   grunt.loadNpmTasks('grunt-force');
 
   // Load grunt tasks automatically
   require('load-grunt-tasks')(grunt);
@@ -399,8 +400,7 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
-    'newer:jshint',
-    'test',
+    'force:on',
     'build'
   ]);
 };
